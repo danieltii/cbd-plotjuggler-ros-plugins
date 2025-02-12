@@ -20,6 +20,11 @@
 
 using MessageRefPtr = std::shared_ptr<rosbag2_storage::SerializedBagMessage>;
 
+struct TopicInfoComparator {
+    bool operator()(const TopicInfo& a, const TopicInfo& b) const {
+        return a.topic_name < b.topic_name;  // Orders by "name" in ascending order
+    }
+};
 
 class TopicPublisherROS2 : public PJ::StatePublisher
 {
@@ -75,13 +80,15 @@ private:
 
   int _previous_play_index;
 
-  std::vector<TopicInfo> _topics_info;
+  std::set<TopicInfo, TopicInfoComparator> _topics_info;
 
   std::vector<QAction*> _available_actions;
 
   void broadcastTF(double current_time);
 
   void updatePublishers();
+
+  void updateTopicsSetFromVector(const std::vector<TopicInfo>& vector);
 };
 
 #endif  // STATE_PUBLISHER_ROS2TOPIC_H

@@ -21,6 +21,20 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <layout class="QHBoxLayout" name="topicSearchLayout">
+     <item>
+      <widget class="QLabel" name="searchTopicLabel">
+       <property name="text">
+        <string>Search topic:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="searchTopicLineEdit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>

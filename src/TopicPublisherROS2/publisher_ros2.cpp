@@ -101,7 +101,7 @@ void TopicPublisherROS2::setEnabled(bool to_enable)
     }
     // I stored it in a one point timeseries... shoot me
     const auto any_metadata = metadata_it->second[0].y;
-    _topics_info = std::any_cast<std::vector<TopicInfo>>(any_metadata);
+    updateTopicsSetFromVector(std::any_cast<std::vector<TopicInfo>>(any_metadata));
 
     // select all the topics by default
     for(const auto& info: _topics_info)
@@ -138,7 +138,7 @@ void TopicPublisherROS2::filterDialog()
   {
     // I stored it in a one point timeseries... shoot me
     const auto any_metadata = metadata_it->second[0].y;
-    _topics_info = std::any_cast<std::vector<TopicInfo>>(any_metadata);
+    updateTopicsSetFromVector(std::any_cast<std::vector<TopicInfo>>(any_metadata));
   }
 
   PublisherSelectDialog *dialog =  new PublisherSelectDialog();
@@ -162,10 +162,21 @@ void TopicPublisherROS2::filterDialog()
       cb->setChecked(filter_it->second);
     }
     cb->setFocusPolicy(Qt::NoFocus);
-    dialog->ui()->formLayout->addRow(new QLabel(QString::fromStdString(topic_name)), cb);
+
+    QWidget* rowWidget = new QWidget();
+    QHBoxLayout* rowLayout = new QHBoxLayout(rowWidget);
+    rowLayout->addWidget(new QLabel(QString::fromStdString(topic_name)));
+    rowLayout->addWidget(cb);
+    rowLayout->setContentsMargins(0, 0, 0, 0);  // Remove extra spacing
+    rowWidget->setLayout(rowLayout);
+    dialog->ui()->formLayout->addRow(rowWidget);
     checkbox.insert(std::make_pair(topic_name, cb));
     connect(dialog->ui()->pushButtonSelect, &QPushButton::pressed, [cb]() { cb->setChecked(true); });
     connect(dialog->ui()->pushButtonDeselect, &QPushButton::pressed, [cb]() { cb->setChecked(false); });
+    connect(dialog->ui()->searchTopicLineEdit, &QLineEdit::textChanged, [rowWidget, topic_name](const QString& text) {
+        bool topicNameMatches = QString::fromStdString(topic_name).contains(text, Qt::CaseInsensitive);
+        rowWidget->setVisible(topicNameMatches);
+    });
   }
 
   dialog->exec();
@@ -391,3 +402,8 @@ void TopicPublisherROS2::play(double current_time)
   }
 }
 
+void TopicPublisherROS2::updateTopicsSetFromVector(const std::vector<TopicInfo>& topics_info_vector)
+{
+    _topics_info.clear();  
+    _topics_info.insert(topics_info_vector.begin(), topics_info_vector.end());
+}
