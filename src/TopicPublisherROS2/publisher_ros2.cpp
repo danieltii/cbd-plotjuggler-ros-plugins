@@ -147,18 +147,23 @@ void TopicPublisherROS2::filterDialog()
   dialog->ui()->radioButtonHeaderStamp->setHidden(true);
 
   std::map<std::string, QCheckBox*> checkbox;
+  std::unordered_map<std::string, bool> new_topics_to_publish;
 
   for (const TopicInfo& info : _topics_info)
   {
     const std::string topic_name = info.topic_name;
     auto cb = new QCheckBox(dialog);
+    new_topics_to_publish.insert({topic_name, false});
+
     auto filter_it = _topics_to_publish.find(topic_name);
     if (filter_it == _topics_to_publish.end())
     {
+      new_topics_to_publish.at(topic_name) = true;
       cb->setChecked(true);
     }
     else
     {
+      new_topics_to_publish.at(topic_name) = filter_it->second;
       cb->setChecked(filter_it->second);
     }
     cb->setFocusPolicy(Qt::NoFocus);
@@ -177,18 +182,17 @@ void TopicPublisherROS2::filterDialog()
         bool topicNameMatches = QString::fromStdString(topic_name).contains(text, Qt::CaseInsensitive);
         rowWidget->setVisible(topicNameMatches);
     });
+    connect(cb, &QAbstractButton::toggled, [cb, topic_name, &new_topics_to_publish](bool checked)
+    { 
+      new_topics_to_publish.at(topic_name) = checked;
+    });
   }
 
   dialog->exec();
 
   if (dialog->result() == QDialog::Accepted)
   {
-    _topics_to_publish.clear();
-    for (const auto& it : checkbox)
-    {
-      _topics_to_publish.insert({ it.first, it.second->isChecked() });
-    }
-
+    _topics_to_publish = new_topics_to_publish;
     updatePublishers();
   }
 }
